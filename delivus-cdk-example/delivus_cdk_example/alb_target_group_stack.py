@@ -10,70 +10,84 @@ class AlbTargetGroupStack(cdk.NestedStack):
 
         # env
         infra_env = config["INFRA_ENV"]
-        alb_availability_zones = ec2.Vpc.from_vpc_attributes(
+        exmaple_vpc = ec2.Vpc.from_vpc_attributes(
             self,
-            "alb-availability-zones",
+            "example-alb-vpc",
             vpc_id=cdk.Fn.import_value("vpc-id"),
             availability_zones=[
                 "ap-northeast-2a",
                 "ap-northeast-2b",
-                "ap-northeast-2c",
-                "ap-northeast-2d",
             ],
         )
 
-        # Create ALB (api)
-        example_api_alb = elb_v2.CfnLoadBalancer(
+        # Create ALB (API)
+        example_api_alb = elb_v2.ApplicationLoadBalancer(
             self,
             f"{infra_env}-api-alb",
-            ip_address_type="ipv4",
-            name=f"{infra_env}-api-alb",
-            scheme="internet-facing",
-            security_groups=[cdk.Fn.import_value("alb-sg")],
-            subnets=[
-                cdk.Fn.import_value("pulbic-subnet-1-id"),
-            ],
-            type="application",
-        )
-
-        # Load ALB Interface (L1 -> L2, IApplicationInterface)
-        example_api_alb_interface = (
-            elb_v2.ApplicationLoadBalancer.from_application_load_balancer_attributes(
+            security_group=ec2.SecurityGroup.from_security_group_id(
                 self,
-                f"{infra_env}-api-alb-lookup",
-                load_balancer_arn=example_api_alb.ref,
+                f"example-{infra_env}-api-alb-sg",
                 security_group_id=cdk.Fn.import_value("alb-sg"),
-            )
+            ),
+            vpc=exmaple_vpc,
+            internet_facing=True,
+            load_balancer_name=f"{infra_env}-api-alb",
+            vpc_subnets=ec2.SubnetSelection(
+                subnets=[
+                    ec2.Subnet.from_subnet_attributes(
+                        self,
+                        f"{infra_env}-api-alb-subnet-1",
+                        subnet_id=cdk.Fn.import_value("pulbic-subnet-1-id"),
+                    ),
+                    ec2.Subnet.from_subnet_attributes(
+                        self,
+                        f"{infra_env}-api-alb-subnet-2",
+                        subnet_id=cdk.Fn.import_value("pulbic-subnet-2-id"),
+                    ),
+                ]
+            ),
         )
 
-        # Create ALB Listener
-        example_api_alb_listener = elb_v2.ApplicationTargetGroup(
-            self,
-            f"{infra_env}-api-alb-listener",
-            port=80,
-            target_group_name=f"{infra_env}-api-alb-listener",
-            health_check=elb_v2.HealthCheck(path="/api/healthcheck/"),
-            vpc=alb_availability_zones,
-            target_type=elb_v2.TargetType.IP,
-        )
+        # # Create Listener (API ALB Listener 80)
+        # example_api_alb_listener = elb_v2.ApplicationTargetGroup(
+        #     self,
+        #     f"{infra_env}-api-alb-listener",
+        #     port=80,
+        #     target_group_name=f"{infra_env}-api-alb-listener",
+        #     health_check=elb_v2.HealthCheck(path="/api/healthcheck/"),
+        #     vpc=exmaple_vpc,
+        #     target_type=elb_v2.TargetType.IP,
+        # )
 
-        # Add ALB Listener
-        example_api_alb_add_listener = elb_v2.ApplicationListener(
-            self,
-            f"{infra_env}-api-alb-add-listener",
-            load_balancer=example_api_alb_interface,
-            default_target_groups=[example_api_alb_listener],
-            protocol=elb_v2.ApplicationProtocol.HTTP,
-        )
+        # # Add 80 Listener (API ALB)
+        # exmaple_api_alb_add_listener = example_api_alb.add_listener(
+        #     f"{infra_env}-api-alb-add-listener-80",
+        #     protocol=elb_v2.ApplicationProtocol.HTTP,
+        #     port=80,
+        #     default_action=elb_v2.ListenerAction(
+        #         action_json=elb_v2.CfnListener.ActionProperty(
+        #             type="forward",
+        #             target_group_arn=example_api_alb_listener.target_group_arn,
+        #         )
+        #     ),
+        # )
 
         # Output
-        cdk.CfnOutput(self, "alb-arn", value=example_api_alb.ref, export_name="alb-arn")
         cdk.CfnOutput(
-            self, "alb-dns-name", value=example_api_alb.attr_dns_name, export_name="alb-dns-name"
+            self,
+            "alb-arn",
+            value=example_api_alb.load_balancer_arn,
+            export_name="alb-arn",
         )
         cdk.CfnOutput(
             self,
-            "alb-target-group-arn",
-            value=example_api_alb_listener.target_group_arn,
-            export_name="alb-target-group-arn",
+            "alb-dns-name",
+            value=example_api_alb.load_balancer_dns_name,
+            export_name="alb-dns-name",
         )
+        # cdk.CfnOutput(
+        #     self,
+        #     "alb-target-group-arn",
+        #     value=example_api_alb_listener.target_group_arn,
+        #     export_name="alb-target-group-arn",
+        # )

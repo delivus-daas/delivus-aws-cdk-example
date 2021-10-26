@@ -1,4 +1,3 @@
-import os
 from aws_cdk import Stack
 from constructs import Construct
 from .iam_role_stack import AppIamRoleStack
@@ -10,6 +9,11 @@ from .bastion_ec2_stack import Ec2Stack
 from .alb_target_group_stack import AlbTargetGroupStack
 from .s3_stack import S3Stack
 
+# Doesn't run by default (Just example code)
+from .amplify_stack import AmplifyStack
+from .ecr_stack import EcrStack
+from .ecs_stack import EcsStack
+
 
 class DelivusCdkExampleStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
@@ -17,7 +21,8 @@ class DelivusCdkExampleStack(Stack):
 
         config = {
             "INFRA_ENV": "example",
-            "KEY_PAIR_NAME": "[update your key pair name]",
+            "KEY_PAIR_NAME": [],
+            # "GITHUB_TOKEN": [] -> Use by Amplify
         }
 
         # The code that defines your stack goes here
@@ -29,6 +34,9 @@ class DelivusCdkExampleStack(Stack):
         alb_target_group_stack = AlbTargetGroupStack(self, "alb_target_group", config=config)
         bastion_ec2_stack = Ec2Stack(self, "ec2_stack", config=config)
         rds_stack = RdsStack(self, "rds_stack", config=config)
+        # amplify_stack = AmplifyStack(self, "amplify_stack", config=config)
+        # ecr_stack = EcrStack(self, "ecr_stack", config=config)
+        # ecs_stack = EcsStack(self, "ecs_stack", config=config)
 
         # Stack Execution order
         vpc_subnet_stack.add_dependency(role_stack)
@@ -38,3 +46,6 @@ class DelivusCdkExampleStack(Stack):
         alb_target_group_stack.add_dependency(cloud_watch_log_stack)
         bastion_ec2_stack.add_dependency(alb_target_group_stack)
         rds_stack.add_dependency(bastion_ec2_stack)
+        # amplify_stack.add_dependency(rds_stack)
+        # ecr_stack.add_dependency(amplify_stack)
+        # ecs_stack.add_dependency(ecr_stack)

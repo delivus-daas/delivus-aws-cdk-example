@@ -9,3 +9,22 @@ def get_policy_bastion_instance():
     )
 
     return bastion_Instance
+
+
+def get_policy_ecs_server_task_or_execution_policy():
+
+    # Creating new custom Policies
+    ecs_policy = iam.PolicyStatement(
+        resources=["*"],
+        sid="VisualEditor0",
+        actions=[
+            "s3:*",
+            "ssm:*",
+            "cloudwatch:*",
+            "kms:*",
+            "logs:*",
+            "lambda:*",
+        ],
+    )
+
+    return ecs_policy

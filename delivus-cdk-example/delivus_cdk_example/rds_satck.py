@@ -1,7 +1,6 @@
 import aws_cdk as cdk
 import aws_cdk.aws_rds as rds
 import aws_cdk.aws_ssm as ssm
-import aws_cdk.aws_s3 as s3
 from constructs import Construct
 
 
@@ -18,9 +17,9 @@ class RdsStack(cdk.NestedStack):
         # Pre-create required (AWS SSM)
         ssm_db_password = ssm.StringParameter.from_secure_string_parameter_attributes(
             self,
-            "/Secure/DB_PASSWORD",
+            "/DB_PASSWORD",
             version=1,
-            parameter_name="/Secure/DB_PASSWORD",
+            parameter_name="/DB_PASSWORD",
         )
         rds_paasword = ssm_db_password.string_value
 
@@ -29,7 +28,10 @@ class RdsStack(cdk.NestedStack):
             self,
             f"{infra_env}-aurora-cluster-subnetgroup",
             db_subnet_group_description=f"aurora cluster subnetgroup",
-            subnet_ids=[cdk.Fn.import_value("private-subnet-1-id")],
+            subnet_ids=[
+                cdk.Fn.import_value("private-subnet-1-id"),
+                cdk.Fn.import_value("private-subnet-2-id"),
+            ],
             db_subnet_group_name=f"{infra_env}-aurora-cluster-subnetgroup",
         )
 
@@ -85,3 +87,11 @@ class RdsStack(cdk.NestedStack):
         aurora_rds_cluster.add_depends_on(rds_subnet_group)
         aurora_rds_cluster.add_depends_on(aurora_rds_cluster_parameter)
         aurora_rds_instance_1.add_depends_on(aurora_rds_cluster)
+
+        # output
+        cdk.CfnOutput(
+            self,
+            "rds-host",
+            value=aurora_rds_cluster.attr_endpoint_address,
+            export_name="rds-host",
+        )

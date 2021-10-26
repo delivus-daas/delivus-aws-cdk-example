@@ -43,4 +43,9 @@ class S3Stack(cdk.NestedStack):
         public_s3.add_to_resource_policy(public_s3_policy_1)
 
         # output
-        cdk.CfnOutput(self, "s3-stack-name", value=self.artifact_id, export_name="s3-stack-name")
+        cdk.CfnOutput(
+            self,
+            "s3-stack-name",
+            value=self.artifact_id,
+            export_name="s3-stack-name",
+        )

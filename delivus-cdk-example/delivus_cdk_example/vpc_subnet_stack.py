@@ -1,8 +1,6 @@
 import aws_cdk as cdk
 from constructs import Construct
 import aws_cdk.aws_ec2 as ec2
-import aws_cdk.cloudformation_include as cloudformation
-from aws_cdk import aws_kms as kms
 
 
 class VpcSubnetStack(cdk.NestedStack):
@@ -20,7 +18,7 @@ class VpcSubnetStack(cdk.NestedStack):
             enable_dns_support=True,
         )
 
-        # Create subnet_1 (public, private)
+        # Create subnet_1 (public)
         pulbic_subnet_1 = ec2.CfnSubnet(
             self,
             f"{infra_env}-pulbic-1",
@@ -30,12 +28,32 @@ class VpcSubnetStack(cdk.NestedStack):
             map_public_ip_on_launch=True,
         )
 
+        # Create subnet_2 (public)
+        pulbic_subnet_2 = ec2.CfnSubnet(
+            self,
+            f"{infra_env}-pulbic-2",
+            cidr_block="172.0.0.16/28",
+            vpc_id=vpc.ref,
+            availability_zone="ap-northeast-2b",
+            map_public_ip_on_launch=True,
+        )
+
+        # Create subnet_1 (private)
         private_subnet_1 = ec2.CfnSubnet(
             self,
             f"{infra_env}-private-1",
             cidr_block="172.0.0.64/28",
             vpc_id=vpc.ref,
             availability_zone="ap-northeast-2a",
+        )
+
+        # Create subnet_2 (private)
+        private_subnet_2 = ec2.CfnSubnet(
+            self,
+            f"{infra_env}-private-2",
+            cidr_block="172.0.0.80/28",
+            vpc_id=vpc.ref,
+            availability_zone="ap-northeast-2b",
         )
 
         # Create Elastic IP
@@ -82,6 +100,24 @@ class VpcSubnetStack(cdk.NestedStack):
             subnet_id=pulbic_subnet_1.ref,
         )
 
+        # public_subnet_2
+        route_table_pulbic_subnet_2 = ec2.CfnRouteTable(
+            self, f"{infra_env}-vpc-route-table-public-2", vpc_id=vpc.ref
+        )
+        route_pulbic_subnet_2 = ec2.CfnRoute(
+            self,
+            f"{infra_env}-vpc-route-public-2",
+            route_table_id=route_table_pulbic_subnet_2.ref,
+            gateway_id=internet_gateway.ref,
+            destination_cidr_block="0.0.0.0/0",
+        )
+        route_attach_pulbic_subnet_2 = ec2.CfnSubnetRouteTableAssociation(
+            self,
+            f"{infra_env}-vpc-routeattach-public-2",
+            route_table_id=route_table_pulbic_subnet_2.ref,
+            subnet_id=pulbic_subnet_2.ref,
+        )
+
         # private_subnet_1
         route_table_private_subnet_1 = ec2.CfnRouteTable(
             self, f"{infra_env}-vpc-route-table-private-1", vpc_id=vpc.ref
@@ -100,11 +136,52 @@ class VpcSubnetStack(cdk.NestedStack):
             subnet_id=private_subnet_1.ref,
         )
 
+        # private_subnet_2
+        route_table_private_subnet_2 = ec2.CfnRouteTable(
+            self, f"{infra_env}-vpc-route-table-private-2", vpc_id=vpc.ref
+        )
+        route_private_subnet_2 = ec2.CfnRoute(
+            self,
+            f"{infra_env}-vpc-route-private-2",
+            route_table_id=route_table_private_subnet_2.ref,
+            gateway_id=internet_gateway.ref,
+            destination_cidr_block="0.0.0.0/0",
+        )
+        route_attach_private_subnet_2 = ec2.CfnSubnetRouteTableAssociation(
+            self,
+            f"{infra_env}-vpc-routeattach-private-2",
+            route_table_id=route_table_private_subnet_2.ref,
+            subnet_id=private_subnet_2.ref,
+        )
+
         # output
-        cdk.CfnOutput(self, "vpc-id", value=vpc.ref, export_name="vpc-id")
         cdk.CfnOutput(
-            self, "pulbic-subnet-1", value=pulbic_subnet_1.ref, export_name="pulbic-subnet-1-id"
+            self,
+            "vpc-id",
+            value=vpc.ref,
+            export_name="vpc-id",
         )
         cdk.CfnOutput(
-            self, "private-subnet-1", value=private_subnet_1.ref, export_name="private-subnet-1-id"
+            self,
+            "pulbic-subnet-1",
+            value=pulbic_subnet_1.ref,
+            export_name="pulbic-subnet-1-id",
+        )
+        cdk.CfnOutput(
+            self,
+            "pulbic-subnet-2",
+            value=pulbic_subnet_2.ref,
+            export_name="pulbic-subnet-2-id",
+        )
+        cdk.CfnOutput(
+            self,
+            "private-subnet-1",
+            value=private_subnet_1.ref,
+            export_name="private-subnet-1-id",
+        )
+        cdk.CfnOutput(
+            self,
+            "private-subnet-2",
+            value=private_subnet_2.ref,
+            export_name="private-subnet-2-id",
         )

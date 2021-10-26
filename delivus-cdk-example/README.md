@@ -1,1 +1,0 @@
-# Welcome to Delivus CDK Python project!

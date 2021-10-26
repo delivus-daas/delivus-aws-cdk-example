@@ -10,17 +10,16 @@ class CloudWatchLogsStack(cdk.NestedStack):
         # env
         infra_env = config["INFRA_ENV"]
 
-        # Create Xray Logs
+        # Create Xray Logs (L1)
         xray_cloudwatch_logs = logs.CfnLogGroup(
-            self, f"{infra_env}-xray-logs", log_group_name="/example/xray"
+            self,
+            f"{infra_env}-xray-logs",
+            log_group_name="/ecs/example/xray",
         )
 
-        # Create Nginx Logs
-        nginx_cloudwatch_logs = logs.CfnLogGroup(
-            self, f"{infra_env}-nginx-logs", log_group_name="/ecs/example-nginx"
-        )
-
-        # Create API Logs
-        api_cloudwatch_logs = logs.CfnLogGroup(
-            self, f"{infra_env}-api-logs", log_group_name="/ecs/example-api"
+        # Create API Logs (L2)
+        api_logs = logs.LogGroup(
+            self,
+            f"{infra_env}-api-logs",
+            log_group_name="/ecs/example-api",
         )
