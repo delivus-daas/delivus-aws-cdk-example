@@ -27,9 +27,11 @@ The Delivus AWS CDK Examples require the following languages and libraries:
 
 # Getting Started
 `Please refer to the blog below`
+
 **1. Configuration of AWS CDK usage environment.**
 - [KOR](https://medium.com/@dongkyu_87923/aws-cdk-%EC%82%AC%EC%9A%A9-%ED%99%98%EA%B2%BD-%EA%B5%AC%EC%84%B1-python-9cabc04cb8dc)
 - ENG (TBD)
+
 **2. Build Daas infrastructure using AWS CDK**
 - [KOR](https://medium.com/@dongkyu_87923/aws-cdk%EB%A5%BC-%EC%82%AC%EC%9A%A9%ED%95%9C-daas-%EC%9D%B8%ED%94%84%EB%9D%BC-%EA%B5%AC%EC%B6%95-1df30bae675b)
 - ENG (TBD)
